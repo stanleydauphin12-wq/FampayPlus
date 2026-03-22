@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FAMpay+">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0B1D6E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FAMpay+ Final</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+body { background: #000; display: flex; justify-content: center; padding: 0; min-height: 100vh; overflow-x: hidden; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif; }
+
+.phone { width: 100%; max-width: 430px; min-height: 100vh; border-radius: 0; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.15); box-shadow: none; }
+
+.dynamic-island { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); width: 120px; height: 34px; background: #000; border-radius: 20px; z-index: 100; }
+
+.bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(100,200,255,0.35) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(120,80,255,0.3) 0%, transparent 45%),
+    radial-gradient(ellipse at 50% 60%, rgba(0,180,120,0.2) 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 80%, rgba(255,120,80,0.15) 0%, transparent 45%),
+    linear-gradient(160deg, #0a1628 0%, #0d1f3c 40%, #0a1420 100%);
+  animation: bgPulse 8s ease-in-out infinite alternate;
+}
+@keyframes bgPulse { 0% { filter: hue-rotate(0deg) brightness(1); } 100% { filter: hue-rotate(15deg) brightness(1.08); } }
+
+/* VIP BG OVERLAY */
+.bg-vip {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 20%, rgba(255,200,50,0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 70% 60%, rgba(255,160,0,0.2) 0%, transparent 50%),
+    linear-gradient(160deg, #1a1000 0%, #1f1500 40%, #120e00 100%);
+  display: none;
+  animation: bgPulse 8s ease-in-out infinite alternate;
+}
+
+.glass { background: rgba(255,255,255,0.08); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); border: 1px solid rgba(255,255,255,0.18); }
+.glass-dark { background: rgba(0,0,0,0.25); backdrop-filter: blur(40px) saturate(200%); -webkit-backdrop-filter: blur(40px) saturate(200%); border: 1px solid rgba(255,255,255,0.1); }
+.glass-card { background: rgba(255,255,255,0.07); backdrop-filter: blur(60px) saturate(200%); -webkit-backdrop-filter: blur(60px) saturate(200%); border: 1px solid rgba(255,255,255,0.14); box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2); }
+.glass-gold { background: rgba(255,200,50,0.1); backdrop-filter: blur(60px) saturate(200%); -webkit-backdrop-filter: blur(60px) saturate(200%); border: 1px solid rgba(255,200,50,0.25); box-shadow: 0 8px 32px rgba(255,180,0,0.15), inset 0 1px 0 rgba(255,220,100,0.3); }
+
+.status-bar { position: relative; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 16px 28px 0; font-size: 15px; font-weight: 600; color: #fff; }
+
+.screen { display: none; position: relative; z-index: 5; min-height: 790px; padding-bottom: 100px; }
+.screen.active { display: block; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.screen.active > * { animation: fadeUp 0.3s ease forwards; }
+
+.app-header { padding: 20px 24px 8px; display: flex; justify-content: space-between; align-items: center; }
+.logo { font-size: 26px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+.logo em { color: #34d399; font-style: italic; }
+.logo .plus { color: #60a5fa; }
+.logo.vip em { color: #fbbf24; }
+.logo.vip .plus { color: #f59e0b; }
+
+.header-right { display: flex; gap: 10px; align-items: center; }
+.icon-btn { width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 17px; cursor: pointer; }
+
+/* VIP BADGE */
+.vip-badge {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 700;
+  background: linear-gradient(135deg, rgba(255,200,50,0.25), rgba(255,140,0,0.2));
+  border: 1px solid rgba(255,200,50,0.4);
+  color: #fbbf24;
+  cursor: pointer;
+}
+
+.greeting { padding: 4px 24px 20px; font-size: 14px; color: rgba(255,255,255,0.55); }
+.greeting strong { color: #fff; font-size: 22px; font-weight: 600; display: block; margin-bottom: 2px; letter-spacing: -0.3px; }
+
+/* BALANCE CARD */
+.balance-card { margin: 0 18px 20px; border-radius: 28px; padding: 26px 24px 22px; position: relative; overflow: hidden; }
+.balance-card::before { content: ''; position: absolute; top: -40px; right: -40px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(96,165,250,0.3) 0%, transparent 70%); border-radius: 50%; }
+.balance-card::after { content: ''; position: absolute; bottom: -20px; left: -20px; width: 120px; height: 120px; background: radial-gradient(circle, rgba(52,211,153,0.2) 0%, transparent 70%); border-radius: 50%; }
+.balance-card.vip-card::before { background: radial-gradient(circle, rgba(255,200,50,0.3) 0%, transparent 70%); }
+.balance-card.vip-card::after { background: radial-gradient(circle, rgba(255,140,0,0.2) 0%, transparent 70%); }
+
+.bal-label { font-size: 13px; color: rgba(255,255,255,0.55); font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+.bal-amount { font-size: 42px; font-weight: 700; color: #fff; letter-spacing: -1px; margin-bottom: 4px; }
+.bal-amount span { font-size: 20px; opacity: 0.6; font-weight: 400; }
+.bal-usdt { font-size: 13px; color: rgba(255,255,255,0.45); margin-bottom: 22px; }
+
+.method-switcher { display: flex; gap: 8px; margin-bottom: 18px; }
+.method-pill { flex: 1; padding: 9px 12px; border-radius: 20px; text-align: center; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5); cursor: pointer; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); transition: all 0.25s; }
+.method-pill.active { background: rgba(255,255,255,0.18); color: #fff; border-color: rgba(255,255,255,0.25); box-shadow: 0 2px 12px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.3); }
+
+.bal-actions { display: flex; gap: 10px; }
+.bal-action { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; }
+.bal-action-icon { width: 46px; height: 46px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); box-shadow: inset 0 1px 0 rgba(255,255,255,0.3); }
+.bal-action-label { font-size: 11px; color: rgba(255,255,255,0.65); font-weight: 500; }
+
+.section-header { padding: 0 24px 12px; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.8px; }
+
+/* QUICK GRID */
+.quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 0 18px 22px; }
+.q-item { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+.q-icon { width: 58px; height: 58px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 15px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.25); transition: transform 0.15s; }
+.q-icon:hover { transform: scale(0.94); }
+.q-label { font-size: 11px; color: rgba(255,255,255,0.65); font-weight: 500; text-align: center; }
+
+/* SERVICES */
+.services-row { display: flex; gap: 12px; padding: 0 18px 22px; overflow-x: auto; }
+.services-row::-webkit-scrollbar { display: none; }
+.svc-card { min-width: 140px; border-radius: 22px; padding: 16px 14px; flex-shrink: 0; cursor: pointer; position: relative; overflow: hidden; transition: transform 0.15s; }
+.svc-card:hover { transform: scale(0.97); }
+.svc-emoji { font-size: 26px; margin-bottom: 10px; }
+.svc-name { font-size: 13px; font-weight: 700; color: #fff; margin-bottom: 3px; }
+.svc-price { font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 6px; }
+.svc-badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 20px; }
+.svc-badge.abo { border: 1px solid rgba(52,211,153,0.4); color: #34d399; background: rgba(52,211,153,0.1); }
+.svc-badge.instant { border: 1px solid rgba(96,165,250,0.4); color: #60a5fa; background: rgba(96,165,250,0.1); }
+.svc-badge.locked { border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.05); }
+.svc-badge.vip-only { border: 1px solid rgba(255,200,50,0.4); color: #fbbf24; background: rgba(255,200,50,0.1); }
+
+/* LOCKED OVERLAY */
+.lock-overlay {
+  position: absolute; inset: 0; border-radius: 22px;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer;
+}
+.lock-icon { font-size: 22px; }
+.lock-text { font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.7); text-align: center; letter-spacing: 0.5px; }
+
+/* TXN */
+.txn-list { padding: 0 18px; display: flex; flex-direction: column; gap: 10px; }
+.txn-item { border-radius: 18px; padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; transition: transform 0.15s; }
+.txn-item:hover { transform: scale(0.99); }
+.txn-icon { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.txn-info { flex: 1; }
+.txn-name { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 3px; }
+.txn-date { font-size: 12px; color: rgba(255,255,255,0.4); }
+.txn-amt { font-size: 15px; font-weight: 700; }
+.txn-amt.debit { color: #f87171; }
+.txn-amt.credit { color: #34d399; }
+
+/* NAVBAR */
+.navbar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 430px; padding: 12px 24px 28px; display: flex; justify-content: space-around; z-index: 50; border-top: 1px solid rgba(255,255,255,0.08); }
+.nav-item { display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+.nav-icon { font-size: 22px; }
+.nav-label { font-size: 10px; color: rgba(255,255,255,0.45); font-weight: 500; }
+.nav-item.active .nav-label { color: #60a5fa; }
+.nav-dot { width: 4px; height: 4px; background: #60a5fa; border-radius: 50%; margin: 0 auto; }
+.nav-item.active.vip-nav .nav-label { color: #fbbf24; }
+.nav-dot.gold { background: #fbbf24; }
+
+/* FORM */
+.screen-back { padding: 16px 24px 4px; color: #60a5fa; font-size: 16px; cursor: pointer; font-weight: 500; }
+.screen-title { padding: 4px 24px 6px; font-size: 28px; font-weight: 700; color: #fff; letter-spacing: -0.5px; }
+.screen-sub { padding: 0 24px 20px; font-size: 14px; color: rgba(255,255,255,0.45); }
+.form-body { padding: 0 18px; }
+.f-group { margin-bottom: 14px; }
+.f-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.45); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; }
+.f-input { width: 100%; border-radius: 16px; padding: 15px 18px; font-size: 16px; color: #fff; outline: none; border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.07); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); font-family: inherit; }
+.f-input:focus { border-color: rgba(96,165,250,0.5); }
+.f-input::placeholder { color: rgba(255,255,255,0.25); }
+
+.pay-toggle { display: flex; border-radius: 16px; padding: 4px; gap: 4px; margin-bottom: 14px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); }
+.pay-opt { flex: 1; padding: 11px; border-radius: 12px; text-align: center; font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.45); cursor: pointer; transition: all 0.2s; }
+.pay-opt.sel { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.2); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); }
+.pay-opt.sel.nat { background: rgba(52,211,153,0.2); border-color: rgba(52,211,153,0.3); color: #34d399; }
+
+.bal-alert { border-radius: 14px; padding: 12px 16px; font-size: 13px; font-weight: 600; margin-bottom: 14px; display: none; line-height: 1.5; }
+.bal-alert.error { background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.3); color: #f87171; }
+.bal-alert.warn { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.25); color: #fbbf24; }
+.bal-alert.ok { background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.25); color: #34d399; }
+
+.submit-btn { width: 100%; padding: 17px; border-radius: 18px; font-size: 17px; font-weight: 700; border: none; cursor: pointer; font-family: inherit; transition: transform 0.15s; margin-top: 4px; }
+.submit-btn:hover { transform: scale(0.99); }
+.submit-btn.enabled { background: linear-gradient(135deg, #34d399, #059669); color: #fff; box-shadow: 0 8px 25px rgba(52,211,153,0.35); }
+.submit-btn.disabled { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.2); cursor: not-allowed; border: 1px solid rgba(255,255,255,0.08); }
+.submit-btn.blue { background: linear-gradient(135deg, #60a5fa, #2563eb); box-shadow: 0 8px 25px rgba(96,165,250,0.3); color: #fff; }
+.submit-btn.gold { background: linear-gradient(135deg, #fbbf24, #d97706); box-shadow: 0 8px 25px rgba(251,191,36,0.35); color: #000; }
+
+.plan-card { border-radius: 18px; padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.06); transition: all 0.2s; }
+.plan-card.sel { border-color: rgba(52,211,153,0.4); background: rgba(52,211,153,0.08); }
+.plan-name { font-size: 15px; font-weight: 700; color: #fff; }
+.plan-desc { font-size: 12px; color: rgba(255,255,255,0.45); margin-top: 3px; }
+.plan-price { font-size: 17px; font-weight: 800; color: #34d399; }
+
+.rate-box { margin: 0 0 16px; border-radius: 18px; padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; }
+.rate-label { font-size: 12px; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+.rate-val { font-size: 22px; font-weight: 800; color: #60a5fa; letter-spacing: -0.5px; }
+
+.coming-card { margin: 0 18px 16px; border-radius: 24px; padding: 28px 24px; text-align: center; border: 1px dashed rgba(255,255,255,0.15); background: rgba(255,255,255,0.03); }
+.cs-tag { display: inline-block; margin-top: 14px; padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: 700; background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.3); color: #60a5fa; }
+.api-list { margin: 0 18px; border-radius: 20px; overflow: hidden; }
+.api-item { display: flex; align-items: center; gap: 14px; padding: 15px 18px; font-size: 14px; color: rgba(255,255,255,0.65); border-bottom: 1px solid rgba(255,255,255,0.06); }
+.api-item:last-child { border-bottom: none; }
+
+/* VIP SCREEN */
+.vip-hero { margin: 0 18px 20px; border-radius: 28px; padding: 28px 24px; text-align: center; position: relative; overflow: hidden; }
+.vip-hero::before { content: ''; position: absolute; top: -50px; right: -50px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(255,200,50,0.3), transparent 70%); border-radius: 50%; }
+.vip-crown { font-size: 50px; margin-bottom: 12px; }
+.vip-title { font-size: 26px; font-weight: 800; color: #fff; letter-spacing: -0.5px; margin-bottom: 6px; }
+.vip-sub { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.6; margin-bottom: 20px; }
+.vip-price { font-size: 36px; font-weight: 900; color: #fbbf24; letter-spacing: -1px; }
+.vip-price span { font-size: 16px; opacity: 0.7; font-weight: 400; }
+
+.vip-perks { margin: 0 18px 20px; border-radius: 20px; overflow: hidden; }
+.perk-item { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-bottom: 1px solid rgba(255,200,50,0.1); }
+.perk-item:last-child { border-bottom: none; }
+.perk-icon { font-size: 20px; width: 36px; text-align: center; }
+.perk-text { font-size: 14px; color: rgba(255,255,255,0.8); font-weight: 500; }
+.perk-new { font-size: 10px; background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.3); color: #34d399; padding: 2px 8px; border-radius: 10px; margin-left: auto; font-weight: 700; }
+
+/* LOCK MODAL */
+.lock-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 200; display: none; align-items: flex-end; justify-content: center; }
+.lock-modal.show { display: flex; }
+.lock-sheet { width: 393px; border-radius: 28px 28px 0 0; padding: 28px 24px 40px; text-align: center; border-top: 1px solid rgba(255,255,255,0.15); background: rgba(15,25,50,0.95); backdrop-filter: blur(40px); -webkit-backdrop-filter: blur(40px); }
+.lock-sheet-icon { font-size: 48px; margin-bottom: 14px; }
+.lock-sheet-title { font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+.lock-sheet-sub { font-size: 14px; color: rgba(255,255,255,0.5); line-height: 1.6; margin-bottom: 24px; }
+.lock-sheet-close { width: 100%; padding: 15px; border-radius: 16px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.7); font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 10px; }
+
+/* QR */
+.qr-wrap { margin: 20px 18px; border-radius: 24px; padding: 28px; text-align: center; }
+.qr-box { width: 170px; height: 170px; background: rgba(255,255,255,0.06); border-radius: 20px; margin: 0 auto 18px; display: flex; align-items: center; justify-content: center; font-size: 70px; border: 1px solid rgba(255,255,255,0.1); }
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="bg" id="main-bg"></div>
+  <div class="bg-vip" id="vip-bg"></div>
+  <div class="dynamic-island"></div>
+  <div class="status-bar"><span>9:41</span><span style="font-size:13px">●●●● ▲</span></div>
+
+  <!-- ══════════ HOME ══════════ -->
+  <div class="screen active" id="s-home">
+    <div class="app-header">
+      <div class="logo" id="home-logo">FAM<em>pay</em><span class="plus">+</span></div>
+      <div class="header-right">
+        <div class="vip-badge" onclick="go('s-vip')">👑 VIP</div>
+        <div class="icon-btn glass">🔔</div>
+      </div>
+    </div>
+    <div class="greeting"><strong>Bonjou, Jean-Pierre 👋</strong>Kisa ou vle fè jodi a?</div>
+
+    <div class="balance-card glass-card" id="home-bal-card">
+      <div class="bal-label">Balans Total</div>
+      <div class="bal-amount">2,500 <span>HTG</span></div>
+      <div class="bal-usdt">≈ 19.08 USDT · Sold limite pou tès</div>
+      <div class="method-switcher">
+        <div class="method-pill active" id="tab-mon" onclick="switchMethod('mon')">📱 MonCash</div>
+        <div class="method-pill" id="tab-nat" onclick="switchMethod('nat')">💳 NatCash</div>
+      </div>
+      <div class="bal-actions">
+        <div class="bal-action" onclick="go('s-send')"><div class="bal-action-icon">⬆️</div><div class="bal-action-label">Voye</div></div>
+        <div class="bal-action" onclick="go('s-receive')"><div class="bal-action-icon">⬇️</div><div class="bal-action-label">Resevwa</div></div>
+        <div class="bal-action" onclick="go('s-usdt')"><div class="bal-action-icon">🪙</div><div class="bal-action-label">USDT</div></div>
+        <div class="bal-action" onclick="go('s-carte')"><div class="bal-action-icon">🏦</div><div class="bal-action-label">Carte</div></div>
+      </div>
+    </div>
+
+    <div class="section-header">Aksyon Rapid</div>
+    <div class="quick-grid">
+      <div class="q-item" onclick="go('s-send')">
+        <div class="q-icon glass-card" id="qi-pay">📱</div>
+        <div class="q-label" id="ql-pay">MonCash</div>
+      </div>
+      <div class="q-item" onclick="go('s-usdt')">
+        <div class="q-icon glass-card" style="background:rgba(52,211,153,0.12);border-color:rgba(52,211,153,0.2)">₮</div>
+        <div class="q-label">USDT</div>
+      </div>
+      <div class="q-item" onclick="go('s-netflix')">
+        <div class="q-icon" style="background:#e50914;border:1px solid rgba(229,9,20,0.4)">🎬</div>
+        <div class="q-label">Netflix</div>
+      </div>
+      <div class="q-item" onclick="go('s-services')">
+        <div class="q-icon glass-card">📺</div>
+        <div class="q-label">Sèvis</div>
+      </div>
+    </div>
+
+    <div class="section-header">Sèvis Dijital</div>
+    <div class="services-row">
+      <!-- AKTIF -->
+      <div class="svc-card glass-card" onclick="go('s-netflix')">
+        <div class="svc-emoji">🎬</div><div class="svc-name">Netflix</div>
+        <div class="svc-price">Depi 390 HTG</div>
+        <div class="svc-badge abo">📅 30 jou</div>
+      </div>
+      <div class="svc-card glass-card" onclick="go('s-services')">
+        <div class="svc-emoji">📦</div><div class="svc-name">Prime Video</div>
+        <div class="svc-price">Depi 520 HTG</div>
+        <div class="svc-badge abo">📅 30 jou</div>
+      </div>
+      <div class="svc-card glass-card" onclick="go('s-services')">
+        <div class="svc-emoji">🎵</div><div class="svc-name">Spotify</div>
+        <div class="svc-price">Depi 380 HTG</div>
+        <div class="svc-badge abo">📅 30 jou</div>
+      </div>
+      <div class="svc-card glass-card" onclick="go('s-services')">
+        <div class="svc-emoji">💚</div><div class="svc-name">Wise</div>
+        <div class="svc-price">Enstantane</div>
+        <div class="svc-badge instant">⚡ Imedya</div>
+      </div>
+      <div class="svc-card glass-card" onclick="go('s-services')">
+        <div class="svc-emoji">🌐</div><div class="svc-name">Meru</div>
+        <div class="svc-price">Enstantane</div>
+        <div class="svc-badge instant">⚡ Imedya</div>
+      </div>
+      <!-- LOCKED -->
+      <div class="svc-card glass-card" style="opacity:0.7" onclick="showLock('Transfè FAMpay→FAMpay','Voye lajan gratis ant itilizatè FAMpay+. Disponib nan 6 mois.')">
+        <div class="svc-emoji">🔄</div><div class="svc-name">Transfè FAM</div>
+        <div class="svc-price">Gratis</div>
+        <div class="svc-badge locked">🔒 Coming Soon</div>
+        <div class="lock-overlay"><div class="lock-icon">🔒</div><div class="lock-text">Coming Soon</div></div>
+      </div>
+      <div class="svc-card glass-card" style="opacity:0.7" onclick="showLock('Peman Sèvis Lokal','Peye EDH, CAMEP, Entènèt dirèkteman sou FAMpay+. Pwochen lanse!')">
+        <div class="svc-emoji">💡</div><div class="svc-name">EDH / CAMEP</div>
+        <div class="svc-price">Peye fasil</div>
+        <div class="svc-badge locked">🔒 Coming Soon</div>
+        <div class="lock-overlay"><div class="lock-icon">🔒</div><div class="lock-text">Coming Soon</div></div>
+      </div>
+      <div class="svc-card glass-card" style="opacity:0.7" onclick="showLock('Ti Biznis','Aksepte peman pwofesyonèl pou boutik ak vendè Instagram/WhatsApp ou.')">
+        <div class="svc-emoji">🛍️</div><div class="svc-name">Ti Biznis</div>
+        <div class="svc-price">Pro peman</div>
+        <div class="svc-badge locked">🔒 Coming Soon</div>
+        <div class="lock-overlay"><div class="lock-icon">🔒</div><div class="lock-text">Coming Soon</div></div>
+      </div>
+      <div class="svc-card glass-card" style="opacity:0.7" onclick="showLock('Kolèkt / Kotizasyon','Òganize kolèkt pou fèt, kominote, ak solidarite familyal facilman.')">
+        <div class="svc-emoji">🤝</div><div class="svc-name">Kolèkt</div>
+        <div class="svc-price">Solidarite</div>
+        <div class="svc-badge locked">🔒 Coming Soon</div>
+        <div class="lock-overlay"><div class="lock-icon">🔒</div><div class="lock-text">Coming Soon</div></div>
+      </div>
+      <div class="svc-card glass-card" style="opacity:0.7" onclick="showLock('Epay Senp 👑 VIP','Mete lajan de côté pou yon objektif espesyal. Fonksyon VIP eksklizif.')">
+        <div class="svc-emoji">🏦</div><div class="svc-name">Epay VIP</div>
+        <div class="svc-price">Objektif</div>
+        <div class="svc-badge vip-only">👑 VIP Only</div>
+        <div class="lock-overlay" style="background:rgba(0,0,0,0.6)"><div class="lock-icon">👑</div><div class="lock-text">VIP Only</div></div>
+      </div>
+    </div>
+
+    <div class="section-header">Dènye Tranzaksyon</div>
+    <div class="txn-list">
+      <div class="txn-item glass-card">
+        <div class="txn-icon" style="background:rgba(229,9,20,0.15);border:1px solid rgba(229,9,20,0.2)">🎬</div>
+        <div class="txn-info"><div class="txn-name">Netflix Premium</div><div class="txn-date">Jodi a · 10:23 · 30 jou</div></div>
+        <div class="txn-amt debit">-1,300</div>
+      </div>
+      <div class="txn-item glass-card">
+        <div class="txn-icon" style="background:rgba(52,211,153,0.12);border:1px solid rgba(52,211,153,0.2)">⬇️</div>
+        <div class="txn-info"><div class="txn-name">Resevwa MonCash</div><div class="txn-date">Yè · 15:47</div></div>
+        <div class="txn-amt credit">+5,000</div>
+      </div>
+      <div class="txn-item glass-card">
+        <div class="txn-icon" style="background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.2)">₮</div>
+        <div class="txn-info"><div class="txn-name">Wise — Enstantane</div><div class="txn-date">20 mas · Pa gen ekspirasyon</div></div>
+        <div class="txn-amt debit">-850</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ VIP ══════════ -->
+  <div class="screen" id="s-vip">
+    <div class="screen-back" onclick="go('s-home');exitVip()" style="color:#fbbf24">‹ Retounen</div>
+    <div class="screen-title" style="color:#fbbf24">👑 FAMpay+ VIP</div>
+    <div class="screen-sub">Aksè eksklizif a tout fonksyon avanse yo</div>
+
+    <div class="vip-hero glass-gold">
+      <div class="vip-crown">👑</div>
+      <div class="vip-title">Devin Manm VIP</div>
+      <div class="vip-sub">Jwenn aksè a sèvis kache yo,<br>prè entèn, ak avantaj espesyal</div>
+      <div class="vip-price">500 <span>HTG / mwa</span></div>
+    </div>
+
+    <div class="section-header" style="color:rgba(251,191,36,0.6)">Avantaj VIP yo</div>
+    <div class="vip-perks glass-gold">
+      <div class="perk-item">
+        <div class="perk-icon">🔄</div>
+        <div class="perk-text">Transfè FAMpay gratis</div>
+        <div class="perk-new">6 mwa</div>
+      </div>
+      <div class="perk-item">
+        <div class="perk-icon">💡</div>
+        <div class="perk-text">Peman EDH / CAMEP</div>
+        <div class="perk-new">6 mwa</div>
+      </div>
+      <div class="perk-item">
+        <div class="perk-icon">🛍️</div>
+        <div class="perk-text">Kont Ti Biznis Pro</div>
+        <div class="perk-new">6 mwa</div>
+      </div>
+      <div class="perk-item">
+        <div class="perk-icon">🤝</div>
+        <div class="perk-text">Kolèkt ak Kotizasyon</div>
+        <div class="perk-new">6 mwa</div>
+      </div>
+      <div class="perk-item">
+        <div class="perk-icon">🏦</div>
+        <div class="perk-text">Epay Senp — Objektif</div>
+        <div class="perk-new">Eksklizif</div>
+      </div>
+      <div class="perk-item">
+        <div class="perk-icon">💰</div>
+        <div class="perk-text">Prè Entèn FAMpay+</div>
+        <div class="perk-new">Eksklizif</div>
+      </div>
+      <div class="perk-item">
+        <div class="perk-icon">⚡</div>
+        <div class="perk-text">Sipò Priorite 24/7</div>
+        <div class="perk-new">VIP</div>
+      </div>
+      <div class="perk-item">
+        <div class="perk-icon">👑</div>
+        <div class="perk-text">Badge VIP sou Pwofil</div>
+      </div>
+    </div>
+
+    <div style="padding:0 18px;">
+      <button class="submit-btn gold" onclick="activateVip()">👑 Aktive VIP — 500 HTG/mwa</button>
+      <button class="lock-sheet-close" style="margin-top:10px" onclick="go('s-home');exitVip()">Pa kounye a</button>
+    </div>
+  </div>
+
+  <!-- ══════════ SEND ══════════ -->
+  <div class="screen" id="s-send">
+    <div class="screen-back" onclick="go('s-home')">‹ Retounen</div>
+    <div class="screen-title" id="send-title">Voye via MonCash</div>
+    <div class="screen-sub">Antre detay peman an</div>
+    <div class="form-body">
+      <div class="pay-toggle">
+        <div class="pay-opt sel" id="s-mon" onclick="togglePay(this,'moncash')">📱 MonCash</div>
+        <div class="pay-opt" id="s-nat" onclick="togglePay(this,'natcash')">💳 NatCash</div>
+      </div>
+      <div class="f-group"><div class="f-label">Nimewo Destinatè</div><input class="f-input" type="tel" placeholder="+509 XXXX-XXXX"></div>
+      <div class="f-group"><div class="f-label">Montan HTG</div><input class="f-input" type="number" placeholder="0" id="send-amt" oninput="chkBal('send-amt','send-alrt','send-btn')"></div>
+      <div class="bal-alert" id="send-alrt"></div>
+      <div class="f-group"><div class="f-label">Rezon (opsyonèl)</div><input class="f-input" type="text" placeholder="Pou ki bagay?"></div>
+      <button class="submit-btn disabled" id="send-btn">⬆ Voye Lajan</button>
+    </div>
+  </div>
+
+  <!-- ══════════ NETFLIX ══════════ -->
+  <div class="screen" id="s-netflix">
+    <div class="screen-back" onclick="go('s-home')">‹ Retounen</div>
+    <div class="screen-title">Aktive Netflix</div>
+    <div class="screen-sub">📅 Abonnman · 30 jou · isSubscription: true</div>
+    <div class="form-body">
+      <div class="plan-card sel" onclick="selPlan(this,390)">
+        <div><div class="plan-name">📱 Mobile</div><div class="plan-desc">SD/HD · 1 ekran</div></div>
+        <div class="plan-price">390 HTG</div>
+      </div>
+      <div class="plan-card" onclick="selPlan(this,650)">
+        <div><div class="plan-name">📺 Standard</div><div class="plan-desc">HD · 2 ekran</div></div>
+        <div class="plan-price">650 HTG</div>
+      </div>
+      <div class="plan-card" onclick="selPlan(this,1300)">
+        <div><div class="plan-name">👑 Premium</div><div class="plan-desc">4K Ultra HD · 4 ekran</div></div>
+        <div class="plan-price">1,300 HTG</div>
+      </div>
+      <div class="pay-toggle">
+        <div class="pay-opt sel" onclick="togglePay(this,'moncash')">📱 MonCash</div>
+        <div class="pay-opt" onclick="togglePay(this,'natcash')">💳 NatCash</div>
+      </div>
+      <div class="f-group"><div class="f-label">Imel Netflix ou</div><input class="f-input" type="email" placeholder="imel@gmail.com"></div>
+      <div class="bal-alert" id="nflx-alrt"></div>
+      <button class="submit-btn disabled" id="nflx-btn">🎬 Aktive Netflix</button>
+    </div>
+  </div>
+
+  <!-- ══════════ USDT ══════════ -->
+  <div class="screen" id="s-usdt">
+    <div class="screen-back" onclick="go('s-home')">‹ Retounen</div>
+    <div class="screen-title">Achte USDT</div>
+    <div class="screen-sub">⚡ Enstantane · TRC20</div>
+    <div class="form-body">
+      <div class="rate-box glass-card"><div><div class="rate-label">To aktyèl</div><div class="rate-val">1 USDT = 131 HTG</div></div><div style="font-size:11px;color:rgba(255,255,255,0.3)">Mete ajou ✓</div></div>
+      <div class="f-group"><div class="f-label">Montan USDT</div><input class="f-input" type="number" placeholder="0.00" id="usdt-in" oninput="calcUsdt()"></div>
+      <div class="f-group"><div class="f-label">Total HTG</div><input class="f-input" id="usdt-htg" placeholder="0 HTG" readonly style="opacity:0.6"></div>
+      <div class="bal-alert" id="usdt-alrt"></div>
+      <div class="pay-toggle">
+        <div class="pay-opt sel" onclick="togglePay(this,'moncash')">📱 MonCash</div>
+        <div class="pay-opt" onclick="togglePay(this,'natcash')">💳 NatCash</div>
+      </div>
+      <div class="f-group"><div class="f-label">Adres Wallet (TRC20)</div><input class="f-input" placeholder="TXxxxxxxxxxxxxxxxxxxxx"></div>
+      <button class="submit-btn disabled blue" id="usdt-btn">🪙 Achte USDT</button>
+    </div>
+  </div>
+
+  <!-- ══════════ RECEIVE ══════════ -->
+  <div class="screen" id="s-receive">
+    <div class="screen-back" onclick="go('s-home')">‹ Retounen</div>
+    <div class="screen-title">Resevwa Lajan</div>
+    <div class="qr-wrap glass-card">
+      <div class="qr-box">📲</div>
+      <div style="font-size:17px;font-weight:700;color:#fff;margin-bottom:6px" id="recv-num">+509-3894-5521 (MonCash)</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.4)">Montre QR oswa nimewo sa a</div>
+    </div>
+  </div>
+
+  <!-- ══════════ CARTE ══════════ -->
+  <div class="screen" id="s-carte">
+    <div class="screen-back" onclick="go('s-home')">‹ Retounen</div>
+    <div class="screen-title">API Carte Crédit</div>
+    <div class="coming-card">
+      <div style="font-size:44px">🏦</div>
+      <div style="font-size:18px;font-weight:700;color:#fff;margin:12px 0 8px">Entegrasyon API an Preparasyon</div>
+      <div style="font-size:13px;color:rgba(255,255,255,0.4);line-height:1.7">Konekte yon API Carte Crédit entènasyonal<br>pou aksepte peman kat atravè FAMpay+</div>
+      <div class="cs-tag">🔧 Mise à Jour Pwochen</div>
+    </div>
+    <div class="api-list glass-card">
+      <div class="api-item">💳 <span>Stripe — Visa / Mastercard</span></div>
+      <div class="api-item">🌍 <span>Flutterwave — Afrik & Karayib</span></div>
+      <div class="api-item">🇭🇹 <span>Pay Haiti — Lokal</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════ SERVICES ══════════ -->
+  <div class="screen" id="s-services">
+    <div class="screen-back" onclick="go('s-home')">‹ Retounen</div>
+    <div class="screen-title">Sèvis Dijital</div>
+    <div style="padding:0 18px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="svc-card glass-card"><div class="svc-emoji">📦</div><div class="svc-name">Prime Video</div><div class="svc-price">520 HTG</div><div class="svc-badge abo">📅 30 jou</div></div>
+      <div class="svc-card glass-card"><div class="svc-emoji">🎵</div><div class="svc-name">Spotify</div><div class="svc-price">380 HTG</div><div class="svc-badge abo">📅 30 jou</div></div>
+      <div class="svc-card glass-card"><div class="svc-emoji">💚</div><div class="svc-name">Wise</div><div class="svc-price">Varye</div><div class="svc-badge instant">⚡ Imedya</div></div>
+      <div class="svc-card glass-card"><div class="svc-emoji">🌐</div><div class="svc-name">Meru</div><div class="svc-price">Varye</div><div class="svc-badge instant">⚡ Imedya</div></div>
+      <div class="svc-card glass-card"><div class="svc-emoji">🎁</div><div class="svc-name">Carte Cadeau</div><div class="svc-price">Varye</div><div class="svc-badge instant">⚡ Imedya</div></div>
+      <div class="svc-card glass-card"><div class="svc-emoji">📶</div><div class="svc-name">Rechaj</div><div class="svc-price">100+ HTG</div><div class="svc-badge instant">⚡ Imedya</div></div>
+    </div>
+  </div>
+
+  <!-- NAVBAR -->
+  <div class="navbar glass-dark" id="main-nav">
+    <div class="nav-item active" onclick="go('s-home');setNav(this)"><div class="nav-icon">🏠</div><div class="nav-label">Akèy</div><div class="nav-dot"></div></div>
+    <div class="nav-item" onclick="go('s-send');setNav(this)"><div class="nav-icon">💸</div><div class="nav-label">Voye</div></div>
+    <div class="nav-item" onclick="go('s-services');setNav(this)"><div class="nav-icon">📺</div><div class="nav-label">Sèvis</div></div>
+    <div class="nav-item" onclick="go('s-usdt');setNav(this)"><div class="nav-icon">🪙</div><div class="nav-label">USDT</div></div>
+    <div class="nav-item" onclick="go('s-vip');setNav(this);enterVip()"><div class="nav-icon">👑</div><div class="nav-label">VIP</div></div>
+  </div>
+
+  <!-- LOCK MODAL -->
+  <div class="lock-modal" id="lock-modal" onclick="hideLock()">
+    <div class="lock-sheet" onclick="event.stopPropagation()">
+      <div class="lock-sheet-icon" id="lm-icon">🔒</div>
+      <div class="lock-sheet-title" id="lm-title">Coming Soon</div>
+      <div class="lock-sheet-sub" id="lm-sub">Sèvis sa a ap disponib byento.</div>
+      <button class="submit-btn gold" onclick="go('s-vip');hideLock();enterVip()">👑 Wè Avantaj VIP</button>
+      <button class="lock-sheet-close" onclick="hideLock()">Fèmen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const BAL = 2500;
+let planPrice = 390;
+let isVip = false;
+
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelector('.phone').scrollTop = 0;
+}
+
+function setNav(el) {
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.remove('active','vip-nav');
+    const d = n.querySelector('.nav-dot');
+    if (d) d.remove();
+  });
+  el.classList.add('active');
+  const dot = document.createElement('div');
+  dot.className = isVip ? 'nav-dot gold' : 'nav-dot';
+  el.appendChild(dot);
+}
+
+function enterVip() {
+  document.getElementById('vip-bg').style.display = 'block';
+  document.getElementById('main-bg').style.opacity = '0.3';
+}
+function exitVip() {
+  document.getElementById('vip-bg').style.display = 'none';
+  document.getElementById('main-bg').style.opacity = '1';
+}
+
+function activateVip() {
+  isVip = true;
+  alert('👑 Ou vin manm VIP! Tout sèvis kache yo ap louvri youn pa youn. Mèsi!');
+  go('s-home');
+  exitVip();
+}
+
+function switchMethod(m) {
+  const mon = document.getElementById('tab-mon');
+  const nat = document.getElementById('tab-nat');
+  if (m === 'mon') {
+    mon.classList.add('active'); nat.classList.remove('active');
+    document.getElementById('qi-pay').textContent = '📱';
+    document.getElementById('ql-pay').textContent = 'MonCash';
+    const rn = document.getElementById('recv-num');
+    if (rn) rn.textContent = '+509-3894-5521 (MonCash)';
+  } else {
+    nat.classList.add('active'); mon.classList.remove('active');
+    document.getElementById('qi-pay').textContent = '💳';
+    document.getElementById('ql-pay').textContent = 'NatCash';
+    const rn = document.getElementById('recv-num');
+    if (rn) rn.textContent = '+509-3894-5521 (NatCash)';
+  }
+}
+
+function togglePay(el, type) {
+  el.parentElement.querySelectorAll('.pay-opt').forEach(o => o.classList.remove('sel','nat'));
+  el.classList.add('sel');
+  if (type === 'natcash') el.classList.add('nat');
+  const t = document.getElementById('send-title');
+  if (t) t.textContent = type === 'natcash' ? 'Voye via NatCash' : 'Voye via MonCash';
+}
+
+function chkBal(inId, alrtId, btnId) {
+  const v = parseFloat(document.getElementById(inId).value) || 0;
+  const a = document.getElementById(alrtId);
+  const b = document.getElementById(btnId);
+  if (v <= 0) { a.style.display='none'; b.className='submit-btn disabled'; return; }
+  if (v > BAL) {
+    a.style.display='block'; a.className='bal-alert error';
+    a.textContent = '❌ Sold ensifizan! Balans: '+BAL.toLocaleString()+' HTG — Bezwen: '+v.toLocaleString()+' HTG';
+    b.className='submit-btn disabled';
+  } else if (v > BAL * 0.8) {
+    a.style.display='block'; a.className='bal-alert warn';
+    a.textContent = '⚠ Atansyon — Rès apre: '+(BAL-v).toLocaleString()+' HTG sèlman';
+    b.className='submit-btn enabled';
+  } else {
+    a.style.display='block'; a.className='bal-alert ok';
+    a.textContent = '✓ OK — Rès apre peman: '+(BAL-v).toLocaleString()+' HTG';
+    b.className='submit-btn enabled';
+  }
+}
+
+function selPlan(el, price) {
+  document.querySelectorAll('.plan-card').forEach(p => p.classList.remove('sel'));
+  el.classList.add('sel'); planPrice = price;
+  const a = document.getElementById('nflx-alrt');
+  const b = document.getElementById('nflx-btn');
+  if (price > BAL) {
+    a.style.display='block'; a.className='bal-alert error';
+    a.textContent = '❌ Sold ensifizan! Plan: '+price.toLocaleString()+' HTG — Balans: '+BAL.toLocaleString()+' HTG';
+    b.className='submit-btn disabled';
+  } else {
+    a.style.display='block'; a.className='bal-alert ok';
+    a.textContent = '✓ OK — Rès apre aktivasyon: '+(BAL-price).toLocaleString()+' HTG';
+    b.className='submit-btn enabled'; b.style.background='linear-gradient(135deg,#e50914,#900)'; b.style.color='#fff';
+  }
+}
+
+function calcUsdt() {
+  const v = parseFloat(document.getElementById('usdt-in').value)||0;
+  const htg = v*131;
+  document.getElementById('usdt-htg').value = htg>0 ? htg.toLocaleString()+' HTG' : '';
+  const a = document.getElementById('usdt-alrt');
+  const b = document.getElementById('usdt-btn');
+  if (v<=0) { a.style.display='none'; b.className='submit-btn disabled blue'; return; }
+  if (htg>BAL) {
+    a.style.display='block'; a.className='bal-alert error';
+    a.textContent='❌ Sold ensifizan! Bezwen '+htg.toLocaleString()+' HTG — Balans: '+BAL.toLocaleString()+' HTG';
+    b.className='submit-btn disabled blue';
+  } else {
+    a.style.display='block'; a.className='bal-alert ok';
+    a.textContent='✓ OK — Rès apre: '+(BAL-htg).toLocaleString()+' HTG';
+    b.className='submit-btn enabled blue';
+  }
+}
+
+function showLock(title, sub) {
+  document.getElementById('lm-title').textContent = title;
+  document.getElementById('lm-sub').textContent = sub;
+  document.getElementById('lock-modal').classList.add('show');
+}
+function hideLock() { document.getElementById('lock-modal').classList.remove('show'); }
+
+selPlan(document.querySelector('.plan-card'), 390);
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('FAMpay+ PWA ready!'))
+      .catch(e => console.log('SW error:', e));
+  });
+}
+</script>
+
+<!-- PWA INSTALL BANNER -->
+<div id="pwa-banner" style="display:none;position:fixed;bottom:90px;left:50%;transform:translateX(-50%);width:357px;z-index:300;padding:14px 18px;border-radius:20px;background:rgba(15,25,50,0.95);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.15);display:flex;align-items:center;gap:12px;">
+  <div style="font-size:28px">📲</div>
+  <div style="flex:1">
+    <div style="font-size:14px;font-weight:700;color:#fff">Enstale FAMpay+</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.5)">Ajoute sou ekran akèy ou</div>
+  </div>
+  <button onclick="installPWA()" style="padding:8px 16px;background:linear-gradient(135deg,#34d399,#059669);border:none;border-radius:12px;color:#fff;font-size:13px;font-weight:700;cursor:pointer;">Enstale</button>
+  <button onclick="document.getElementById('pwa-banner').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.4);font-size:18px;cursor:pointer;">✕</button>
+</div>
+
+<script>
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  document.getElementById('pwa-banner').style.display = 'flex';
+});
+function installPWA() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(choice => {
+      if (choice.outcome === 'accepted') {
+        document.getElementById('pwa-banner').style.display = 'none';
+      }
+      deferredPrompt = null;
+    });
+  }
+}
+window.addEventListener('appinstalled', () => {
+  document.getElementById('pwa-banner').style.display = 'none';
+});
+</script>
+</body>
+</html>
